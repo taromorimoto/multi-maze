@@ -1,6 +1,11 @@
 <template>
-  <div class="player" ref="player">
-    <div class="player-avatar">🚶🏻</div>
+  <div
+    ref="player"
+    class="player"
+  >
+    <div class="player-avatar">
+      🚶🏻
+    </div>
     <div class="player-name">
       {{ user.name }}
     </div>
@@ -17,9 +22,6 @@ export default {
     'x',
     'y',
   ],
-  mounted () {
-    this.update()
-  },
   watch: {
     user () {
       this.update()
@@ -30,6 +32,9 @@ export default {
     y () {
       this.update()
     },
+  },
+  mounted () {
+    this.update()
   },
   methods: {
     update () {

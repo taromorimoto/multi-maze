@@ -8,19 +8,19 @@
 import Vue from 'vue'
 
 import Player from './components/Player.vue'
-Vue.component('player', Player)
+Vue.component('Player', Player)
 
 import Maze from './components/Maze.vue'
-Vue.component('maze', Maze)
+Vue.component('Maze', Maze)
 
 import World from './components/World.vue'
-Vue.component('world', World)
+Vue.component('World', World)
 
 import Controls from './components/Controls.vue'
-Vue.component('controls', Controls)
+Vue.component('Controls', Controls)
 
 export default {
-  name: 'app',
+  name: 'App',
 }
 </script>
 

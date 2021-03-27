@@ -1,21 +1,49 @@
 <template>
   <div id="world">
     <h3>Multi-Maze</h3>
-    <div id="settings-button" @click.prevent="settingsExpanded = !settingsExpanded">⚙️</div>
-    <div id="settings" :class="settingsExpanded ? 'expanded' : ''">
+    <div
+      id="settings-button"
+      @click.prevent="settingsExpanded = !settingsExpanded"
+    >
+      ⚙️
+    </div>
+    <div
+      id="settings"
+      :class="settingsExpanded ? 'expanded' : ''"
+    >
       <ul>
         <li>
-          <button @click="restartGame">Restart Game</button>
+          <button @click="restartGame">
+            Restart Game
+          </button>
         </li>
         <li>
-          <input type="text" v-model="newUserName" placeholder="Name">
-          <button @click="createUser">New player</button>
+          <input
+            v-model="newUserName"
+            type="text"
+            placeholder="Name"
+          >
+          <button @click="createUser">
+            New player
+          </button>
         </li>
-        <li v-for="user in users">
-          <input type="text" v-model="user.name" @blur="updateUser(user)">
+        <li
+          v-for="user in users"
+          :key="user.id"
+        >
+          <input
+            v-model="user.name"
+            type="text"
+            @blur="updateUser(user)"
+          >
           <!-- <input type="number" v-model="user.x">
           <input type="number" v-model="user.y"> -->
-          <button v-if="user.id !== currentUserId" @click="() => selectPlayer(user.id)">Select player</button>
+          <button
+            v-if="user.id !== currentUserId"
+            @click="() => selectPlayer(user.id)"
+          >
+            Select player
+          </button>
           <span v-if="user.id === currentUserId">Me!</span>
         </li>
       </ul>
@@ -38,7 +66,7 @@
         />
         <div id="players">
           <player
-            v-for="(user, i) in users"
+            v-for="user in users"
             :key="user.id"
             :user="user"
             :x="user.x"
@@ -63,7 +91,12 @@ import { db } from '../firebase/db'
 import config from '../config'
 
 export default {
-  name: 'app',
+  name: 'App',
+  setup () {
+    // currentMap: db.collection('maps').doc('default'),
+    // users: db.collection('maps').doc('default').collection('users'),
+
+  },
   data () {
     return {
       newUserName: '',
@@ -77,11 +110,6 @@ export default {
       sizeY: 15,
       settingsExpanded: false,
     }
-  },
-  setup () {
-    // currentMap: db.collection('maps').doc('default'),
-    // users: db.collection('maps').doc('default').collection('users'),
-
   },
   mounted () {
     const mapWidth = (this.sizeX * 2 + 1) * config.tileSize
@@ -142,7 +170,7 @@ export default {
     async createUser () {
       const userRef = await this.getUsersRef().add({
         name: this.newUserName,
-        ...this.maze.entrancePos
+        ...this.maze.entrancePos,
       })
       this.newUserName = ''
 
@@ -193,7 +221,7 @@ export default {
         }
         try {
           db.collection('maps').doc(this.currentMapId).update({
-            mazeData: JSON.stringify(mazeData)
+            mazeData: JSON.stringify(mazeData),
           })
         } catch (err) {
           console.error('Failed to serialize maza data', mazeData, err)

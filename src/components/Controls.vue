@@ -2,17 +2,29 @@
   <div id="controls">
     <div class="row">
       <div />
-      <div class="button up" @touchstart.prevent="$emit('up')" />
+      <div
+        class="button up"
+        @touchstart.prevent="$emit('up')"
+      />
       <div />
     </div>
     <div class="row">
-      <div class="button left" @touchstart.prevent="$emit('left')" />
+      <div
+        class="button left"
+        @touchstart.prevent="$emit('left')"
+      />
       <div />
-      <div class="button right" @touchstart.prevent="$emit('right')" />
+      <div
+        class="button right"
+        @touchstart.prevent="$emit('right')"
+      />
     </div>
     <div class="row">
       <div />
-      <div class="button down" @touchstart.prevent="$emit('down')" />
+      <div
+        class="button down"
+        @touchstart.prevent="$emit('down')"
+      />
       <div />
     </div>
   </div>

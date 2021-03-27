@@ -192,7 +192,7 @@ export class MazeBuilder {
   }
 
   isGap(...cells) {
-    return cells.every((array) => {
+    return cells.every(array => {
       let row, col;
       [row, col] = array;
       if (this.maze[row][col].length > 0) {
@@ -292,9 +292,9 @@ export class MazeBuilder {
     container.id = "maze";
     container.dataset.steps = this.totalSteps;
 
-    this.maze.forEach((row) => {
+    this.maze.forEach(row => {
       let rowDiv = document.createElement("div");
-      row.forEach((cell) => {
+      row.forEach(cell => {
         let cellDiv = document.createElement("div");
         if (cell) {
           cellDiv.className = cell.join(" ");

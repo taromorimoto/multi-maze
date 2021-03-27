@@ -7,9 +7,6 @@
 <script>
 import Vue from 'vue'
 
-import { firestorePlugin } from 'vuefire'
-Vue.use(firestorePlugin)
-
 import Player from './components/Player.vue'
 Vue.component('player', Player)
 

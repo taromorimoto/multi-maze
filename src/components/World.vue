@@ -78,6 +78,11 @@ export default {
       settingsExpanded: false,
     }
   },
+  setup () {
+    // currentMap: db.collection('maps').doc('default'),
+    // users: db.collection('maps').doc('default').collection('users'),
+
+  },
   mounted () {
     const mapWidth = (this.sizeX * 2 + 1) * config.tileSize
     const mapHeight = (this.sizeY * 2 + 1) * config.tileSize
@@ -180,7 +185,7 @@ export default {
     mazeReady (maze) {
       this.maze = maze
 
-      if (!this.currentMap.mazeData) {
+      if (!this.currentMap?.mazeData) {
         const mazeData = {
           maze: maze.maze,
           entrancePos: maze.entrancePos,
@@ -221,11 +226,10 @@ export default {
       return serializedMazeData && JSON.parse(serializedMazeData)
     },
   },
-  firestore: {
-    currentMap: db.collection('maps').doc('default'),
-    maps: db.collection('maps'),
-    users: db.collection('maps').doc('default').collection('users'),
-  },
+  // firestore: {
+  //   currentMap: db.collection('maps').doc('default'),
+  //   users: db.collection('maps').doc('default').collection('users'),
+  // },
 }
 </script>
 

@@ -10,11 +10,6 @@ import Vue from 'vue'
 import { firestorePlugin } from 'vuefire'
 Vue.use(firestorePlugin)
 
-import Vue2TouchEvents from 'vue2-touch-events'
-Vue.use(Vue2TouchEvents, {
-  // swipeTolerance: 100,
-})
-
 import Player from './components/Player.vue'
 Vue.component('player', Player)
 

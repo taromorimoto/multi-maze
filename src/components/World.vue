@@ -51,10 +51,6 @@
     <div
       id="map"
       ref="map"
-      v-touch:swipe.left="onMoveLeft"
-      v-touch:swipe.right="onMoveRight"
-      v-touch:swipe.top="onMoveUp"
-      v-touch:swipe.bottom="onMoveDown"
     >
       <div v-if="users.length > 0">
         <maze
@@ -85,13 +81,12 @@
 </template>
 
 <script>
-import Vue from 'vue'
-
+import { defineComponent } from 'vue'
 import { db } from '../firebase/db'
 import config from '../config'
 
-export default {
-  name: 'App',
+export default defineComponent({
+  name: 'World',
   setup () {
     // currentMap: db.collection('maps').doc('default'),
     // users: db.collection('maps').doc('default').collection('users'),
@@ -258,7 +253,7 @@ export default {
   //   currentMap: db.collection('maps').doc('default'),
   //   users: db.collection('maps').doc('default').collection('users'),
   // },
-}
+})
 </script>
 
 <style lang="scss">

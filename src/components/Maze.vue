@@ -3,9 +3,10 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue'
 import { MazeBuilder } from '../libs/maze-builder'
 
-export default {
+export default defineComponent({
   name: 'Maze',
   props: [
     'xSize',
@@ -28,7 +29,7 @@ export default {
       this.$emit('ready', this.maze)
     },
   },
-}
+})
 </script>
 
 <style lang="scss">

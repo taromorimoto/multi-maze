@@ -5,12 +5,14 @@
   "description": "A Vue.js project",
   "author": "Taro Morimoto <taro.morimoto@gmail.com>",
   "scripts": {
-    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --hot",
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "dev": "vite",
     "lint:js": "eslint --ext .js,.vue --ignore-path .gitignore .",
     "lint:style": "stylelint **/*.{vue,css} --ignore-path .gitignore",
     "lint": "npm run lint:js && npm run lint:style"
   },
+  "type": "module",
   "dependencies": {
     "firebase": "^8.3.1",
     "vue": "^3.0.9"
@@ -21,6 +23,7 @@
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/plugin-transform-shorthand-properties": "^7.12.13",
     "@babel/preset-env": "^7.13.12",
+    "@vitejs/plugin-vue": "^1.2.0",
     "@vue/compiler-sfc": "^3.0.9",
     "babel-loader": "^8.2.2",
     "cross-env": "^7.0.3",
@@ -30,9 +33,11 @@
     "file-loader": "^6.2.0",
     "node-sass": "^5.0.0",
     "npm-check-updates": "^11.3.0",
+    "sass": "^1.32.8",
     "sass-loader": "^11.0.1",
     "stylelint": "^13.12.0",
     "stylelint-config-standard": "^21.0.0",
+    "vite": "^2.1.3",
     "vue-cli-plugin-vue-next": "~0.1.4",
     "vue-loader": "^15.9.6",
     "webpack": "^5.28.0",

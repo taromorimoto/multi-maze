@@ -13,9 +13,10 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue'
 import config from '../config'
 
-export default {
+export default defineComponent({
   name: 'Player',
   props: [
     'user',
@@ -41,7 +42,7 @@ export default {
       this.$refs.player.style.transform = `translate(${this.user.x * config.tileSize}px, ${this.user.y * config.tileSize}px)`;
     },
   },
-}
+})
 </script>
 
 <style lang="scss">

@@ -5,23 +5,11 @@
 </template>
 
 <script>
-import Vue from 'vue'
+import { defineComponent } from 'vue'
 
-import Player from './components/Player.vue'
-Vue.component('Player', Player)
-
-import Maze from './components/Maze.vue'
-Vue.component('Maze', Maze)
-
-import World from './components/World.vue'
-Vue.component('World', World)
-
-import Controls from './components/Controls.vue'
-Vue.component('Controls', Controls)
-
-export default {
+export default defineComponent({
   name: 'App',
-}
+})
 </script>
 
 <style lang="scss">

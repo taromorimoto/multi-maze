@@ -1,11 +1,11 @@
 <template>
   <div id="world">
-    <h3>Multi-Maze</h3>
+    <h3>Multi-Maze: {{ game.player?.name }}</h3>
     <div
       id="settings-button"
       @click.prevent="settingsExpanded = !settingsExpanded"
     >
-      ⚙️
+      {{ settingsExpanded ? '❌' : '⚙️' }}
     </div>
     <div
       id="settings"
@@ -28,7 +28,7 @@
           </button>
         </li>
         <li
-          v-for="user in users"
+          v-for="user in game.users"
           :key="user.id"
         >
           <input
@@ -36,15 +36,13 @@
             type="text"
             @blur="updateUser(user)"
           >
-          <!-- <input type="number" v-model="user.x">
-          <input type="number" v-model="user.y"> -->
           <button
-            v-if="user.id !== currentUserId"
+            v-if="user.id !== game.playerId"
             @click="() => selectPlayer(user.id)"
           >
             Select player
           </button>
-          <span v-if="user.id === currentUserId">Me!</span>
+          <span v-if="user.id === game.playerId">Me!</span>
         </li>
       </ul>
     </div>
@@ -52,17 +50,17 @@
       id="map"
       ref="map"
     >
-      <div v-if="users.length > 0">
+      <div v-if="game.users.length > 0">
         <maze
-          v-if="currentMap"
-          :maze-data="deserializeMazeData(currentMap.mazeData)"
+          v-if="game.currentMap"
+          :maze-data="deserializeMazeData(game.currentMap.mazeData)"
           :x-size="sizeX"
           :y-size="sizeY"
           @ready="mazeReady"
         />
         <div id="players">
           <player
-            v-for="user in users"
+            v-for="user in game.users"
             :key="user.id"
             :user="user"
             :x="user.x"
@@ -81,111 +79,158 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, onMounted, onUpdated, reactive, ref } from 'vue'
+
 import { db } from '../firebase/db'
 import config from '../config'
 
 export default defineComponent({
   name: 'World',
   setup () {
-    // currentMap: db.collection('maps').doc('default'),
-    // users: db.collection('maps').doc('default').collection('users'),
-
-  },
-  data () {
-    return {
-      newUserName: '',
+    const map = ref(null)
+    const newUserName = ref('')
+    const game = reactive({
       users: [],
-      currentUser: null,
-      currentUserId: null,
+      player: null,
+      playerId: null,
       currentMap: null,
       currentMapId: 'default',
       maze: null,
-      sizeX: 15,
-      sizeY: 15,
-      settingsExpanded: false,
-    }
-  },
-  mounted () {
-    const mapWidth = (this.sizeX * 2 + 1) * config.tileSize
-    const mapHeight = (this.sizeY * 2 + 1) * config.tileSize
-    const targetWidth = window.innerWidth > 700 ? 700 : window.innerWidth
-    const scale = targetWidth / mapWidth
-    this.$refs.map.style.transform = `scale(${scale})`
-    this.$refs.map.style.width = `${targetWidth}px`
-    this.$refs.map.style.height = `${mapHeight * scale}px`
+    })
+    let sizeX = 15
+    let sizeY = 15
+    let settingsExpanded = ref(false)
 
-    // document.body.addEventListener('touchmove', function(event) {
-    //   event.preventDefault()
-    // }, { passive: false })
-    document.body.style.overflow = 'hidden'
+    onMounted(() => {
+      // Scale and fit map to screen.
+      const mapWidth = (sizeX * 2 + 1) * config.tileSize
+      const mapHeight = (sizeY * 2 + 1) * config.tileSize
+      const targetWidth = window.innerWidth > 700 ? 700 : window.innerWidth
+      const scale = targetWidth / mapWidth
+      map.value.style.transform = `scale(${scale})`
+      map.value.style.width = `${targetWidth}px`
+      map.value.style.height = `${mapHeight * scale}px`
 
-    // ;['resize', 'orientationchange', 'scroll'].forEach(function(event) {
-    //   window.addEventListener(event, function() {
-    //     window.scrollTo(0, 0);
-    //   });
-    // })
+      window.addEventListener('keydown', e => {
+        switch (e.key) {
+          case 'ArrowDown':
+            e.preventDefault()
+            move(0, 1)
+            break
+          case 'ArrowUp':
+            e.preventDefault()
+            move(0, -1)
+            break
+          case 'ArrowLeft':
+            e.preventDefault()
+            move(-1, 0)
+            break
+          case 'ArrowRight':
+            e.preventDefault()
+            move(1, 0)
+            break
+        }
+      })
 
-    window.addEventListener('keydown', e => {
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
-          this.move(0, 1)
-          break
-        case 'ArrowUp':
-          e.preventDefault()
-          this.move(0, -1)
-          break
-        case 'ArrowLeft':
-          e.preventDefault()
-          this.move(-1, 0)
-          break
-        case 'ArrowRight':
-          e.preventDefault()
-          this.move(1, 0)
-          break
+      // Sync map
+      getMapRef().onSnapshot(snapshot => {
+        game.currentMap = snapshot.data()
+        game.currentMapId = game.currentMap.id
+      })
+
+      // Sync users
+      getUsersRef().onSnapshot(snapshot => {
+        game.users = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+      })
+    })
+
+    onUpdated(() => {
+      // Set player from localStorage if not yet set.
+      if (!game.player && game.users.length > 0) {
+        const userId = localStorage.getItem('playerId')
+        if (userId) {
+          selectPlayer(userId)
+        }
       }
     })
-  },
-  updated () {
-    if (!this.currentUser && this.users.length > 0) {
-      const userId = localStorage.getItem('playerId')
-      if (userId) {
-        this.selectPlayer(userId)
+
+    function getMapRef () {
+      return db.collection('games').doc('default')
+    }
+
+    function getUsersRef () {
+      return getMapRef().collection('users')
+    }
+
+    async function createUser () {
+      const userRef = await getUsersRef().add({
+        name: newUserName.value,
+        ...game.maze?.entrancePos,
+      })
+      newUserName.value = ''
+
+      const user = await getUsersRef().doc(userRef.id).get()
+
+      game.playerId = userRef.id
+      game.player = {
+        id: game.playerId,
+        ...user?.data(),
+      }
+      localStorage.setItem('playerId', game.playerId)
+      console.log('user created!', game.player)
+    }
+
+    function updatePlayer () {
+      getUsersRef().doc(game.player.id).update({...game.player})
+    }
+
+    function updateUser (user) {
+      getUsersRef().doc(user.id).update({...user})
+    }
+
+    function selectPlayer (userId) {
+      game.player = game.users.find(user => user.id === userId)
+      game.playerId = userId
+      localStorage.setItem('playerId', userId)
+    }
+
+    function deserializeMazeData (serializedMazeData) {
+      return serializedMazeData && JSON.parse(serializedMazeData)
+    }
+
+    function mazeReady (maze) {
+      game.maze = maze
+
+      if (!game.currentMap?.mazeData) {
+        const mazeData = {
+          maze: maze.maze,
+          entrancePos: maze.entrancePos,
+          exitPos: maze.exitPos,
+        }
+
+        try {
+          db.collection('games').doc(game.currentMapId).set({
+            mazeData: JSON.stringify(mazeData),
+          })
+        } catch (err) {
+          console.error('Failed to serialize maza data', mazeData, err)
+        }
       }
     }
-  },
-  methods: {
-    getMapRef () {
-      return db.collection('maps').doc('default')
-    },
-    getUsersRef () {
-      return this.getMapRef().collection('users')
-    },
-    async createUser () {
-      const userRef = await this.getUsersRef().add({
-        name: this.newUserName,
-        ...this.maze.entrancePos,
+
+    function restartGame () {
+      game.users.forEach(user => {
+        getUsersRef().doc(user.id).update({...game.maze.entrancePos})
       })
-      this.newUserName = ''
+    }
 
-      console.log('user create!', userRef.id)
-      this.currentUserId = userRef.id
-    },
-    updateCurrentUser () {
-      this.getUsersRef().doc(this.currentUser.id).update({...this.currentUser})
-      // we can also use `$firestoreRefs.user` to refer to the bound user reference
-      // this.$firestoreRefs.user.set(user)
-    },
-    updateUser (user) {
-      this.getUsersRef().doc(user.id).update({...user})
-    },
-    move (directionX, directionY) {
-      const nextX = this.currentUser.x + directionX
-      const nextY = this.currentUser.y + directionY
-
-      const tile = this.maze.getTile(nextX, nextY)
-      // console.log(tile)
+    function move (directionX, directionY) {
+      const nextX = game.player.x + directionX
+      const nextY = game.player.y + directionY
+      const tile = game.maze.getTile(nextX, nextY)
 
       // Out of bounds
       if (tile === false) {
@@ -194,9 +239,9 @@ export default defineComponent({
 
       // Empty space
       if (tile === true) {
-        this.currentUser.x = nextX
-        this.currentUser.y = nextY
-        this.updateCurrentUser()
+        game.player.x = nextX
+        game.player.y = nextY
+        updatePlayer()
         return
       }
 
@@ -204,55 +249,45 @@ export default defineComponent({
       if (tile.includes('wall')) {
         return
       }
-    },
-    mazeReady (maze) {
-      this.maze = maze
+    }
 
-      if (!this.currentMap?.mazeData) {
-        const mazeData = {
-          maze: maze.maze,
-          entrancePos: maze.entrancePos,
-          exitPos: maze.exitPos,
-        }
-        try {
-          db.collection('maps').doc(this.currentMapId).update({
-            mazeData: JSON.stringify(mazeData),
-          })
-        } catch (err) {
-          console.error('Failed to serialize maza data', mazeData, err)
-        }
-      }
-    },
-    restartGame () {
-      this.users.forEach(user => {
-        this.getUsersRef().doc(user.id).update({...this.maze.entrancePos})
-      })
-    },
-    onMoveLeft () {
-      this.move(-1, 0)
-    },
-    onMoveRight () {
-      this.move(1, 0)
-    },
-    onMoveUp () {
-      this.move(0, -1)
-    },
-    onMoveDown () {
-      this.move(0, 1)
-    },
-    selectPlayer (userId) {
-      this.currentUser = this.users.find(user => user.id === userId)
-      this.currentUserId = userId
-      localStorage.setItem('playerId', userId)
-    },
-    deserializeMazeData (serializedMazeData) {
-      return serializedMazeData && JSON.parse(serializedMazeData)
-    },
+    function onMoveLeft () {
+      move(-1, 0)
+    }
+
+    function onMoveRight () {
+      move(1, 0)
+    }
+
+    function onMoveUp () {
+      move(0, -1)
+    }
+
+    function onMoveDown () {
+      move(0, 1)
+    }
+
+    return {
+      map,
+      game,
+      newUserName,
+      sizeX,
+      sizeY,
+      settingsExpanded,
+
+      // Methods
+      createUser,
+      updateUser,
+      selectPlayer,
+      deserializeMazeData,
+      mazeReady,
+      onMoveLeft,
+      onMoveRight,
+      onMoveUp,
+      onMoveDown,
+      restartGame,
+    }
   },
-  // firestore: {
-  //   currentMap: db.collection('maps').doc('default'),
-  //   users: db.collection('maps').doc('default').collection('users'),
-  // },
 })
 </script>
 
